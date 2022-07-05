@@ -16,16 +16,17 @@ exports.initiate = async (req, res) => {
 
 exports.getPost = async (req, res) => {
     try {
-        console.log(req.query.limit)
         const options = {
             page: parseInt(req.query.page) || 0,
-            limit: parseInt(req.query.limit) || 3,
+            limit: parseInt(req.query.limit) || 5,
         };
-        console.log(options)
+
         const posts = await Post.getPost(options);
+        const total = await Post.count({});
         return res.status(200).json({
             success: true,
-            posts
+            posts,
+            total
         });
 
     } catch (error) {
