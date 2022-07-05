@@ -34,4 +34,17 @@ exports.getPost = async (req, res) => {
     }
 }
 
+exports.getPostDetail = async (req, res) => {
+    try {
+        const { id } = req.query
+        console.log(id)
+
+        const post = await Post.getPostDetail(id);
+        return res.status(200).json({ post });
+
+    } catch (error) {
+        return res.status(500).json({ error: error })
+    }
+}
+
 

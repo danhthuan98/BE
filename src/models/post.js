@@ -6,11 +6,6 @@ const postSchema = new mongoose.Schema({
         required: true,
         trim: true,
     },
-    datetime: {
-        type: Date,
-        required: true,
-        default: Date.now()
-    },
     descrip: {
         type: String
     }
@@ -33,10 +28,24 @@ postSchema.statics.createPost = async function (title, descrip) {
 postSchema.statics.getPost = async function (options = {}) {
     try {
         return await this.aggregate([
+            { $sort: { createdAt: -1 } },
             { $skip: options.page * options.limit },
             { $limit: options.limit },
-            { $sort: { createdAt: 1 } }
         ])
+    } catch (error) {
+        throw error;
+    }
+}
+
+postSchema.statics.getPostDetail = async function (id) {
+    try {
+        // console.log(id)
+        const ids = mongoose.Types.ObjectId(id);
+        // console.log(ids)
+        const aggregate = await this.aggregate([
+            { $match: { _id: ids } }
+        ])
+        return aggregate[0];
     } catch (error) {
         throw error;
     }
