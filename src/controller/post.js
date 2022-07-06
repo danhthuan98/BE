@@ -1,4 +1,5 @@
 const Post = require('../models/post');
+const mongoose = require("mongoose");
 
 exports.initiate = async (req, res) => {
     try {
@@ -36,14 +37,51 @@ exports.getPost = async (req, res) => {
 
 exports.getPostDetail = async (req, res) => {
     try {
-        const { id } = req.query
-        console.log(id)
+        const { id } = req.params;
 
         const post = await Post.getPostDetail(id);
-        return res.status(200).json({ post });
+        if (post) {
+            return res.status(200).json({ post });
+        }
+        return res.status(400).json({ message: 'Post has been no exists' })
 
     } catch (error) {
         return res.status(500).json({ error: error })
+    }
+}
+
+exports.updatePost = async (req, res) => {
+    try {
+        const id = mongoose.Types.ObjectId(req.params.id);
+        const { title, descrip } = req.body;
+        const post = { title, descrip }
+        const updatePost = await Post.findOneAndUpdate({ _id: id }, post, { new: true });
+
+        if (!updatePost) {
+            return res.status(400).json({ message: 'Post has been no exists' })
+        }
+
+        return res.status(200).json({ updatePost });
+
+    } catch (error) {
+        return res.status(500).json({ error: error });
+    }
+}
+
+
+exports.deletePost = async (req, res) => {
+    try {
+        const id = mongoose.Types.ObjectId(req.params.id);
+        const deletedPost = await Post.findOneAndDelete({ _id: id });
+
+        if (!deletedPost) {
+            return res.status(400).json({ message: 'Post has been no exists' });
+        }
+
+        return res.status(200).json({ deletedPost, message: 'post has been deleted success!' });
+
+    } catch (error) {
+        return res.status(500).json({ error: error });
     }
 }
 

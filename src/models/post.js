@@ -39,9 +39,8 @@ postSchema.statics.getPost = async function (options = {}) {
 
 postSchema.statics.getPostDetail = async function (id) {
     try {
-        // console.log(id)
+
         const ids = mongoose.Types.ObjectId(id);
-        // console.log(ids)
         const aggregate = await this.aggregate([
             { $match: { _id: ids } }
         ])
