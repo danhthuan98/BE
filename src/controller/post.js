@@ -55,10 +55,13 @@ exports.updatePost = async (req, res) => {
         const id = mongoose.Types.ObjectId(req.params.id);
         const { title, descrip } = req.body;
         const post = { title, descrip }
+        if (title === '') {
+            return res.status(400).json({ error: 'Title must be required' }); 
+        }
         const updatePost = await Post.findOneAndUpdate({ _id: id }, post, { new: true });
 
         if (!updatePost) {
-            return res.status(400).json({ message: 'Post has been no exists' })
+            return res.status(401).json({ error: 'Post has been no exists' })
         }
 
         return res.status(200).json({ updatePost });
@@ -75,7 +78,7 @@ exports.deletePost = async (req, res) => {
         const deletedPost = await Post.findOneAndDelete({ _id: id });
 
         if (!deletedPost) {
-            return res.status(400).json({ message: 'Post has been no exists' });
+            return res.status(401).json({ message: 'Post has been no exists' });
         }
 
         return res.status(200).json({ deletedPost, message: 'post has been deleted success!' });
