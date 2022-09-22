@@ -29,35 +29,32 @@ exports.signin = (req, res) => {
     });
 }
 
-exports.signup = (req, res) => {
+exports.createdCustomer = async (req, res) => {
     User.findOne({ email: req.body.email }).exec(async (error, user) => {
         if (user) return res.status(400).json({ error: "Email has been registed" });
-        let role = "user";
-        const { firstName, lastName, email, password } = req.body;
-        const hash_password = await bcrypt.hash(password, 10);
-        const _user = new User({
-            firstName,
-            lastName,
-            email,
-            hash_password,
-            username: shortid.generate(),
-            role,
-        });
-
-        _user.save((error, data) => {
-            if (error) {
-                return res.status(400).json({
-                    error: "Something went wrong",
-                });
-            }
-
-            if (data) {
-                return res.status(201).json({
-                    message: "User created Successfully..!", 
-                });
-            }
-        });
+        try {
+            await User.createCustomer(req.body);
+            return res.status(201).json({ message: 'Customer has created successfully!' })
+        } catch (err) {
+            return res.status(500).json({ success: false, error: error })
+        }
     });
+}
+
+exports.getAllCustomer = async (req, res) => {
+    try {
+        const options = {
+            page: parseInt(req.query.page) || 0,
+            limit: parseInt(req.query.limit) || 5,
+        };
+
+        const customers = await User.getCustomers(options);
+        const total = await User.countDocuments({});
+        return res.status(200).json({ customers, total });
+
+    } catch (error) {
+        return res.status(500).json({ error: error })
+    }
 }
 
 exports.signout = (req, res) => {

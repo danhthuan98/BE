@@ -104,31 +104,31 @@ exports.getProductDetails = (req, res) => {
   }
 };
 
-exports.getProducts = async (req, res) => {
-  let query = {};
-  if (req.body.search) {
-    const { search } = req.body;
-    if (search.length > 1) {
-      query = { ...query, name: { $regex: '.*' + search + '.*' } }
-    }
-    const products = await Product.find(query).limit(5)
-      .select("_id name price quantity slug description productPictures category parentId color sale type screenSize ")
-      .select("screenTechnology camera cameraSelfie chipSet ram internalMemory battery pixelHigh pixelWide operatingSystem ")
-      .select("weight backMaterial cpu graphicCard communication chargingTime chargingPort waterProof diameter")
-      .populate({ path: "category", select: "_id name" })
-      .exec();
-    return res.status(200).json({ products });
-  } else {
-    const products = await Product.find(query)
-      .select("_id name price quantity slug description productPictures category parentId color sale type screenSize ")
-      .select("screenTechnology camera cameraSelfie chipSet ram internalMemory battery pixelHigh pixelWide operatingSystem ")
-      .select("weight backMaterial cpu graphicCard communication chargingTime chargingPort waterProof diameter")
-      .populate({ path: "category", select: "_id name" })
-      .exec();
-    return res.status(200).json({ products });
-  }
+// exports.getProducts = async (req, res) => {
+//   let query = {};
+//   if (req.body.search) {
+//     const { search } = req.body;
+//     if (search.length > 1) {
+//       query = { ...query, name: { $regex: '.*' + search + '.*' } }
+//     }
+//     const products = await Product.find(query).limit(5)
+//       .select("_id name price quantity slug description productPictures category parentId color sale type screenSize ")
+//       .select("screenTechnology camera cameraSelfie chipSet ram internalMemory battery pixelHigh pixelWide operatingSystem ")
+//       .select("weight backMaterial cpu graphicCard communication chargingTime chargingPort waterProof diameter")
+//       .populate({ path: "category", select: "_id name" })
+//       .exec();
+//     return res.status(200).json({ products });
+//   } else {
+//     const products = await Product.find(query)
+//       .select("_id name price quantity slug description productPictures category parentId color sale type screenSize ")
+//       .select("screenTechnology camera cameraSelfie chipSet ram internalMemory battery pixelHigh pixelWide operatingSystem ")
+//       .select("weight backMaterial cpu graphicCard communication chargingTime chargingPort waterProof diameter")
+//       .populate({ path: "category", select: "_id name" })
+//       .exec();
+//     return res.status(200).json({ products });
+//   }
 
-};
+// };
 
 exports.deleteProductById = (req, res) => {
   const { productId } = req.body.payload;
@@ -308,4 +308,27 @@ exports.getProductByColor = async (req, res) => {
 
   res.status(200).json({ products });
 
+}
+
+
+// Code new 
+
+exports.getProducts = async (req, res) => {
+  try {
+    const options = {
+      page: parseInt(req.query.page) || 0,
+      limit: parseInt(req.query.limit) || 6,
+    };
+
+    const { name } = req.query;
+    const query = name ? { name: { $regex: '.*' + name + '.*' } } : {};
+    const products = await Product.find(query)
+      .skip(options.page * options.limit)
+      .limit(options.limit);
+    const total = await Product.countDocuments(query);
+    return res.status(200).json({ products, total });
+
+  } catch (error) {
+    return res.status(500).json({ error: error })
+  }
 }
