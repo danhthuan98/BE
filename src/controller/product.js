@@ -320,11 +320,12 @@ exports.getProducts = async (req, res) => {
       limit: parseInt(req.query.limit) || 6,
     };
 
-    const { name } = req.query;
-    const query = name ? { name: { $regex: '.*' + name + '.*' } } : {};
+    const { keyword, sortType, sortDirection } = req.query;
+    const query = keyword ? { name: { $regex: '.*' + keyword.toLowerCase() + '.*', $options: 'i' } } : {};
     const products = await Product.find(query)
       .skip(options.page * options.limit)
-      .limit(options.limit);
+      .limit(options.limit)
+      .sort({ price: sortDirection === 'desc' ? -1 : 1 })
     const total = await Product.countDocuments(query);
     return res.status(200).json({ products, total });
 
