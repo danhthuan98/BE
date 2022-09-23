@@ -18,7 +18,7 @@ const addressRouter = require("./router/address");
 const orderRoutes = require("./router/order");
 const adminOrderRoutes = require("./router/admin/orderRoutes");
 const chatRoomRouter = require("./router/ChatRoom");
-const postRouter = require('./router/post')
+
 
 // config variable environment
 env.config();
@@ -46,7 +46,6 @@ app.use('/api', cartRouter);
 app.use('/api', addressRouter);
 app.use("/api", orderRoutes);
 app.use("/api", adminOrderRoutes);
-app.use('/api', postRouter);
 
 
 /** Socket IO */

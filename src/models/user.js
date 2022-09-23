@@ -3,58 +3,51 @@ const bcrypt = require("bcrypt");
 
 const userSchema = new mongoose.Schema(
   {
-    firstName: {
+    name: {
       type: String,
       required: true,
       trim: true,
-      min: 3,
-      max: 20,
-    },
-    lastName: {
-      type: String,
-      required: true,
-      trim: true,
-      min: 3,
-      max: 20,
-    },
-    username: {
-      type: String,
-      required: true,
-      trim: true,
-      unique: true,
-      index: true,
-      lowercase: true,
     },
     email: {
       type: String,
       required: true,
       trim: true,
       unique: true,
-      lowercase: true,
-    },
-    hash_password: {
-      type: String,
-      required: true,
     },
     role: {
       type: String,
       enum: ["user", "admin", "super-admin"],
       default: "user",
     },
+    address: { type: String },
     contactNumber: { type: String },
     profilePicture: { type: String },
+    country: { type: String }
   },
   { timestamps: true }
 );
 
-// userSchema.virtual('password')
-// .set(function(password){
-//     this.hash_password = bcrypt.hashSync(password, 10);
-// });
+userSchema.statics.createCustomer = async function (cust) {
+  try {
+    const customer = { ...cust, contactNumber: cust.phone }
+    await this.create(customer);
+  } catch (error) {
+    throw error;
+  }
+}
 
-userSchema.virtual("fullName").get(function () {
-  return `${this.firstName} ${this.lastName}`;
-});
+userSchema.statics.getCustomers = async function (options = {}) {
+  try {
+    return await this.aggregate([
+      { $match: { role: "user" } },
+      // { $sort: { createdAt: -1 } },
+      { $skip: options.page * options.limit },
+      { $limit: options.limit },
+    ])
+  } catch (error) {
+    throw error;
+  }
+}
 
 userSchema.methods = {
   authenticate: async function (password) {
