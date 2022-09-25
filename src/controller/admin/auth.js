@@ -13,7 +13,7 @@ exports.signin = (req, res) => {
                 const token = jwt.sign(
                     { _id: user._id, role: user.role },
                     process.env.JWT_SECRET,
-                    { expiresIn: "10d" }
+                    { expiresIn: "10s" }
                 );
 
                 const refreshToken = await RefreshToken.createToken(user);
@@ -26,10 +26,10 @@ exports.signin = (req, res) => {
                     refreshToken
                 });
             } else {
-                res.status(400).json({ error: "invalid password" })
+                res.status(400).json({ error: "Invalid password" })
             }
         } else {
-            res.status(400).json({ error: "Admin is not exists" })
+            res.status(400).json({ error: "User isn't exist" })
         }
     });
 }
@@ -58,7 +58,7 @@ exports.refreshToken = async (req, res) => {
         }
 
         let newAccessToken = jwt.sign({ _id: refreshToken.user._id, role: "admin" }, process.env.JWT_SECRET, {
-            expiresIn: "10d"
+            expiresIn: "10s"
         });
 
         return res.status(200).json({
@@ -84,7 +84,6 @@ exports.signup = (req, res) => {
             lastName,
             email,
             hash_password,
-            username: shortid.generate(),
             role,
             profilePicture
         });

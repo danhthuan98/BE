@@ -41,6 +41,6 @@ router.post("/product/getProductByColor", getProductByColor);
 
 /* Code new */
 
-router.get('/product/getproducts', getProducts);
+router.get('/product/getproducts', requireSignin, adminMiddleware, getProducts);
 
 module.exports = router;
