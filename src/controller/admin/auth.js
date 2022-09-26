@@ -131,7 +131,6 @@ exports.updateUserProfile = async (req, res) => {
         { $set: condition },
         { new: true }, (err, result) => {
             if (err) {
-                console.log(err);
                 return res.status(400).json({ error: "Something went wrong" })
             } else {
                 const user = {};
@@ -144,4 +143,13 @@ exports.updateUserProfile = async (req, res) => {
                 return res.status(200).json({ user });
             }
         })
+}
+
+exports.getUserInformation = async (req, res) => {
+    await User.findOne({ _id: req.user }, (err, user) => {
+        if (err) {
+            return res.status(400).json({ error: "Something went wrong" });
+        }
+        return res.status(200).json(user);
+    }).select('firstName lastName email profilePicture _id role')
 }
