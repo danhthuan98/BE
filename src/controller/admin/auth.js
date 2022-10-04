@@ -1,7 +1,6 @@
 const User = require("../../models/user");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const shortid = require("shortid");
 const RefreshToken = require("../../models/refreshToken");
 
 exports.signin = (req, res) => {
@@ -13,7 +12,7 @@ exports.signin = (req, res) => {
                 const token = jwt.sign(
                     { _id: user._id, role: user.role },
                     process.env.JWT_SECRET,
-                    { expiresIn: "10s" }
+                    { expiresIn: "1d" }
                 );
 
                 const refreshToken = await RefreshToken.createToken(user);

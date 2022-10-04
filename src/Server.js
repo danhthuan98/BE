@@ -18,6 +18,7 @@ const addressRouter = require("./router/address");
 const orderRoutes = require("./router/order");
 const adminOrderRoutes = require("./router/admin/orderRoutes");
 const chatRoomRouter = require("./router/ChatRoom");
+const postRouter = require('./router/post');
 
 
 // config variable environment
@@ -40,6 +41,7 @@ app.use('/api', authRouter);
 app.use('/api', categoryRouter);
 app.use('/api', initialDataRouter);
 app.use('/api', productRouter);
+app.use('/api', postRouter);
 
 app.use('/api', userRouter);
 app.use('/api', cartRouter);
