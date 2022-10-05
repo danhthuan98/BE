@@ -28,6 +28,24 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin", "super-admin"],
       default: "user",
     },
+    posts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Post',
+      },
+    ],
+    likes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Like',
+      },
+    ],
+    comments: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Comment',
+      },
+    ],
     address: { type: String },
     contactNumber: { type: String },
     profilePicture: { type: String },
