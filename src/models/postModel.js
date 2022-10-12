@@ -7,7 +7,7 @@ const postSchema = new mongoose.Schema({
         trim: true
     },
     postPictures: [
-        { img: { type: String } }
+        { img: { type: String }, description: { type: String } }
     ],
     friendTag: [
         {
