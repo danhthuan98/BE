@@ -1,10 +1,33 @@
+// const upload = require('../utils/cloudinary');
 const Post = require('../models/postModel');
-const User = require('../models/user');
+const { cloudinary } = require('../utils/cloudinary');
+
+// const User = require('../models/user');
 
 exports.createPost = async (req, res) => {
-    const { description } = req.body;
+    const { title, img } = req.body;
     const { _id } = req.user;
-    const newPost = new Post({ description, author: _id });
+    let imageUrl = [];
+    if (img) {
+        const options = { upload_preset: 'dev_setups' };
+        for (const item of img) {
+            const uploadResponse = await cloudinary.uploader.upload(item, options);
+            if (!uploadResponse.secure_url) {
+                return res.status(400).json('Something went wrong while uploading image to Cloudinary');
+            }
+            imageUrl.push(uploadResponse.secure_url);
+        }
+    }
+
+    const arrPictures = imageUrl.map((item) => {
+        return {
+            img: item
+        }
+    })
+
+    const content = arrPictures.length > 0 ? { title, author: _id, postPictures: arrPictures } : { title, author: _id };
+
+    const newPost = new Post(content);
 
     newPost.save((error, post) => {
         if (error) return res.status(400).json({ error });
@@ -13,7 +36,7 @@ exports.createPost = async (req, res) => {
         }
     });
 
-    await User.findOneAndUpdate({ _id }, { $push: { posts: newPost.id } });
+    // await User.findOneAndUpdate({ _id }, { $push: { posts: newPost.id } });
 };
 
 exports.getPost = async (req, res) => {

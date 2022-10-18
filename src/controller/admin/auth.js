@@ -2,6 +2,7 @@ const User = require("../../models/user");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const RefreshToken = require("../../models/refreshToken");
+const { cloudinary } = require('../../utils/cloudinary');
 
 exports.signin = (req, res) => {
     User.findOne({ email: req.body.email }).exec(async (error, user) => {
@@ -150,5 +151,24 @@ exports.getUserInformation = async (req, res) => {
             return res.status(400).json({ error: "Something went wrong" });
         }
         return res.status(200).json(user);
-    }).select('firstName lastName email profilePicture _id role')
+    }).select('firstName lastName email profilePicture public_id  _id role')
+}
+
+exports.uploadUserImage = async (req, res) => {
+    try {
+        const fileStr = req.body.data;
+        const { public_id } = req.body;
+        const imageid = public_id && public_id.split('/')[1];
+        const options = { upload_preset: 'dev_setups', public_id: imageid, overwrite: public_id ? true : false }
+        const { _id } = req.user;
+        const uploadResponse = await cloudinary.uploader.upload(fileStr, options); 
+
+        await User.findOneAndUpdate({ _id }, { $set: { profilePicture: uploadResponse.secure_url, public_id: uploadResponse.public_id } },
+            { new: true });
+
+        return res.status(200).json(uploadResponse.secure_url)
+    } catch (err) {
+        console.error(err);
+        res.status(400).json({ err: err.message });
+    }
 }
