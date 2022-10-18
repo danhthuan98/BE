@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 
 const postSchema = new mongoose.Schema({
-    description: {
+    title: {
         type: String,
         required: true,
         trim: true
     },
     postPictures: [
-        { img: { type: String } }
+        { img: { type: String }, description: { type: String } }
     ],
     friendTag: [
         {

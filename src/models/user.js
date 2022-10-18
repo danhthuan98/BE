@@ -49,6 +49,7 @@ const userSchema = new mongoose.Schema(
     address: { type: String },
     contactNumber: { type: String },
     profilePicture: { type: String },
+    public_id: { type: String },
     country: { type: String }
   },
   { timestamps: true }
