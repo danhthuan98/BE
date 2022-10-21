@@ -181,3 +181,25 @@ exports.updateAudiencePost = async (req, res) => {
             }
         })
 }
+
+exports.getUserSuggestedByName = async (req, res) => {
+    try {
+        const options = {
+            page: parseInt(req.query.page) || 0,
+            limit: parseInt(req.query.limit) || 5,
+        };
+
+        const { keyword } = req.query;
+        const query = { lastName: { $regex: '.*' + keyword.toLowerCase() + '.*', $options: 'i' } };
+        const users = await User.find(query)
+            .skip(options.page * options.limit)
+            .limit(options.limit)
+            .sort({ lastName: 'asc' })
+            .select('firstName lastName profilePicture _id')
+        const total = await User.countDocuments(query);
+        return res.status(200).json({ users, total });
+
+    } catch (error) {
+        return res.status(500).json({ error: error })
+    }
+}
