@@ -4,19 +4,28 @@ const { cloudinary } = require('../utils/cloudinary');
 
 // const User = require('../models/user');
 
+function upload(item, options) {
+    return new Promise((resolve, reject) => {
+        const uploadResponse = cloudinary.uploader.upload(item, options)
+            .then(() => resolve(uploadResponse.secure_url))
+            .catch((err) => reject(err));
+    });
+}
+
 exports.createPost = async (req, res) => {
-    const { title, img } = req.body;
+    const { title, img, audience } = req.body;
     const { _id } = req.user;
     let imageUrl = [];
+
     if (img) {
         const options = { upload_preset: 'dev_setups' };
+        let promiseArray = [];
         for (const item of img) {
-            const uploadResponse = await cloudinary.uploader.upload(item, options);
-            if (!uploadResponse.secure_url) {
-                return res.status(400).json('Something went wrong while uploading image to Cloudinary');
-            }
-            imageUrl.push(uploadResponse.secure_url);
+            promiseArray.push(upload(item, options))
         }
+        await Promise.all(promiseArray)
+            .then((response) => { imageUrl = response })
+            .catch((error) => res.status(400).json('Something went wrong while uploading image to Cloudinary'));
     }
 
     const arrPictures = imageUrl.map((item) => {
@@ -25,7 +34,7 @@ exports.createPost = async (req, res) => {
         }
     })
 
-    const content = arrPictures.length > 0 ? { title, author: _id, postPictures: arrPictures } : { title, author: _id };
+    const content = arrPictures.length > 0 ? { title, author: _id, postPictures: arrPictures, audience } : { title, author: _id, audience };
 
     const newPost = new Post(content);
 
@@ -35,8 +44,6 @@ exports.createPost = async (req, res) => {
             res.status(201).json({ newPost });
         }
     });
-
-    // await User.findOneAndUpdate({ _id }, { $push: { posts: newPost.id } });
 };
 
 exports.getPost = async (req, res) => {

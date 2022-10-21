@@ -23,6 +23,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    audience_setting: {
+      type: String,
+      enum: ["public", "friends", "onlyme"],
+      default: "public"
+    },
     role: {
       type: String,
       enum: ["user", "admin", "super-admin"],
