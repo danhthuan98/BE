@@ -191,12 +191,13 @@ exports.getUserSuggestedByName = async (req, res) => {
 
         const { keyword } = req.query;
         const query = { lastName: { $regex: '.*' + keyword.toLowerCase() + '.*', $options: 'i' } };
-        const users = await User.find(query)
+        const result = await User.find(query)
             .skip(options.page * options.limit)
             .limit(options.limit)
             .sort({ lastName: 'asc' })
             .select('firstName lastName profilePicture _id')
         const total = await User.countDocuments(query);
+        const users = result.filter((x) => x._id != req.user._id);
         return res.status(200).json({ users, total });
 
     } catch (error) {

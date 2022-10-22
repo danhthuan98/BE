@@ -6,14 +6,14 @@ const { cloudinary } = require('../utils/cloudinary');
 
 function upload(item, options) {
     return new Promise((resolve, reject) => {
-        const uploadResponse = cloudinary.uploader.upload(item, options)
-            .then(() => resolve(uploadResponse.secure_url))
+        cloudinary.uploader.upload(item, options)
+            .then((response) => resolve(response.secure_url))
             .catch((err) => reject(err));
     });
 }
 
 exports.createPost = async (req, res) => {
-    const { title, img, audience } = req.body;
+    const { title, img, audience, friendTag } = req.body;
     const { _id } = req.user;
     let imageUrl = [];
 
@@ -24,7 +24,7 @@ exports.createPost = async (req, res) => {
             promiseArray.push(upload(item, options))
         }
         await Promise.all(promiseArray)
-            .then((response) => { imageUrl = response })
+            .then((response) => imageUrl = response)
             .catch((error) => res.status(400).json('Something went wrong while uploading image to Cloudinary'));
     }
 
@@ -34,7 +34,8 @@ exports.createPost = async (req, res) => {
         }
     })
 
-    const content = arrPictures.length > 0 ? { title, author: _id, postPictures: arrPictures, audience } : { title, author: _id, audience };
+    const content = arrPictures.length > 0 ? { title, author: _id, postPictures: arrPictures, audience, friendTag } :
+        { title, author: _id, audience, friendTag };
 
     const newPost = new Post(content);
 
