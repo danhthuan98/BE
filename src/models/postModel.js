@@ -10,9 +10,9 @@ const postSchema = new mongoose.Schema({
         { img: { type: String }, description: { type: String } }
     ],
     friendTag: [
-        {
-            userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
-        }
+
+        { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+
     ],
     likes: [
         {

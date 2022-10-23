@@ -39,10 +39,19 @@ exports.createPost = async (req, res) => {
 
     const newPost = new Post(content);
 
-    newPost.save((error, post) => {
+    newPost.save(async (error, result) => {
         if (error) return res.status(400).json({ error });
-        if (post) {
-            res.status(201).json({ newPost });
+        if (result) {
+            const post = await Post.findById({ _id: result._id }).
+                populate({
+                    path: 'friendTag',
+                    select: 'firstName lastName profilePicture'
+                }).
+                populate({
+                    path: 'author',
+                    select: 'firstName lastName profilePicture'
+                })
+            res.status(201).json({ post });
         }
     });
 };
@@ -54,17 +63,14 @@ exports.getPost = async (req, res) => {
     };
     const posts = await Post.find(query)
         .populate({
+            path: 'friendTag',
+            select: 'firstName lastName profilePicture'
+        }).
+        populate({
             path: 'author',
-            select: 'firstName lastName profilePicture',
-            populate: [
-                { path: 'following' },
-                { path: 'followers' },
-                {
-                    path: 'notifications',
-                    populate: [{ path: 'author' }, { path: 'follow' }, { path: 'like' }, { path: 'comment' }],
-                },
-            ],
-        }).sort({ createdAt: -1 })
+            select: 'firstName lastName profilePicture'
+        })
+        .sort({ createdAt: -1 })
     // .populate('likes')
     // .populate({
     //     path: 'comments',
