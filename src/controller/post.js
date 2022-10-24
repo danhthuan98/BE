@@ -59,7 +59,11 @@ exports.createPost = async (req, res) => {
 exports.getPost = async (req, res) => {
     const { _id } = req.params;
     const query = {
-        author: { _id }
+        $or: [{ author: { _id } }, { friendTag: { $elemMatch: { $eq: _id } } }]
+    };
+    // const options = { page: 0 };
+    const options = {
+        page: parseInt(req.query.page) || 0,
     };
     const posts = await Post.find(query)
         .populate({
@@ -69,15 +73,11 @@ exports.getPost = async (req, res) => {
         populate({
             path: 'author',
             select: 'firstName lastName profilePicture'
-        })
-        .sort({ createdAt: -1 })
-    // .populate('likes')
-    // .populate({
-    //     path: 'comments',
-    //     options: { sort: { createdAt: -1 } },
-    //     populate: { path: 'author' },
-    // });
+        }).skip(options.page * 5)
+        .limit(5)
+        .sort({ createdAt: -1 });
+    const total = await Post.countDocuments(query);
 
-    return res.status(200).json({ posts });
+    return res.status(200).json({ posts, total });
 
 }

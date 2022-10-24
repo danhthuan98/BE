@@ -13,7 +13,7 @@ exports.signin = (req, res) => {
                 const token = jwt.sign(
                     { _id: user._id, role: user.role },
                     process.env.JWT_SECRET,
-                    { expiresIn: "1d" }
+                    { expiresIn: "10s" }
                 );
 
                 const refreshToken = await RefreshToken.createToken(user);
