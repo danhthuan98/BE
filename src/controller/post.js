@@ -4,19 +4,28 @@ const { cloudinary } = require('../utils/cloudinary');
 
 // const User = require('../models/user');
 
+function upload(item, options) {
+    return new Promise((resolve, reject) => {
+        cloudinary.uploader.upload(item, options)
+            .then((response) => resolve(response.secure_url))
+            .catch((err) => reject(err));
+    });
+}
+
 exports.createPost = async (req, res) => {
-    const { title, img } = req.body;
+    const { title, img, audience, friendTag } = req.body;
     const { _id } = req.user;
     let imageUrl = [];
+
     if (img) {
         const options = { upload_preset: 'dev_setups' };
+        let promiseArray = [];
         for (const item of img) {
-            const uploadResponse = await cloudinary.uploader.upload(item, options);
-            if (!uploadResponse.secure_url) {
-                return res.status(400).json('Something went wrong while uploading image to Cloudinary');
-            }
-            imageUrl.push(uploadResponse.secure_url);
+            promiseArray.push(upload(item, options))
         }
+        await Promise.all(promiseArray)
+            .then((response) => imageUrl = response)
+            .catch((error) => res.status(400).json('Something went wrong while uploading image to Cloudinary'));
     }
 
     const arrPictures = imageUrl.map((item) => {
@@ -25,45 +34,50 @@ exports.createPost = async (req, res) => {
         }
     })
 
-    const content = arrPictures.length > 0 ? { title, author: _id, postPictures: arrPictures } : { title, author: _id };
+    const content = arrPictures.length > 0 ? { title, author: _id, postPictures: arrPictures, audience, friendTag } :
+        { title, author: _id, audience, friendTag };
 
     const newPost = new Post(content);
 
-    newPost.save((error, post) => {
+    newPost.save(async (error, result) => {
         if (error) return res.status(400).json({ error });
-        if (post) {
-            res.status(201).json({ newPost });
+        if (result) {
+            const post = await Post.findById({ _id: result._id }).
+                populate({
+                    path: 'friendTag',
+                    select: 'firstName lastName profilePicture'
+                }).
+                populate({
+                    path: 'author',
+                    select: 'firstName lastName profilePicture'
+                })
+            res.status(201).json({ post });
         }
     });
-
-    // await User.findOneAndUpdate({ _id }, { $push: { posts: newPost.id } });
 };
 
 exports.getPost = async (req, res) => {
     const { _id } = req.params;
     const query = {
-        author: { _id }
+        $or: [{ author: { _id } }, { friendTag: { $elemMatch: { $eq: _id } } }]
+    };
+    // const options = { page: 0 };
+    const options = {
+        page: parseInt(req.query.page) || 0,
     };
     const posts = await Post.find(query)
         .populate({
+            path: 'friendTag',
+            select: 'firstName lastName profilePicture'
+        }).
+        populate({
             path: 'author',
-            select: 'firstName lastName profilePicture',
-            populate: [
-                { path: 'following' },
-                { path: 'followers' },
-                {
-                    path: 'notifications',
-                    populate: [{ path: 'author' }, { path: 'follow' }, { path: 'like' }, { path: 'comment' }],
-                },
-            ],
-        }).sort({ createdAt: -1 })
-    // .populate('likes')
-    // .populate({
-    //     path: 'comments',
-    //     options: { sort: { createdAt: -1 } },
-    //     populate: { path: 'author' },
-    // });
+            select: 'firstName lastName profilePicture'
+        }).skip(options.page * 5)
+        .limit(5)
+        .sort({ createdAt: -1 });
+    const total = await Post.countDocuments(query);
 
-    return res.status(200).json({ posts });
+    return res.status(200).json({ posts, total });
 
 }

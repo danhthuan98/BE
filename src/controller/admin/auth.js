@@ -13,7 +13,7 @@ exports.signin = (req, res) => {
                 const token = jwt.sign(
                     { _id: user._id, role: user.role },
                     process.env.JWT_SECRET,
-                    { expiresIn: "1d" }
+                    { expiresIn: "10s" }
                 );
 
                 const refreshToken = await RefreshToken.createToken(user);
@@ -114,11 +114,6 @@ exports.signout = async (req, res) => {
 };
 
 exports.updateUserProfile = async (req, res) => {
-    // User.findOne({ email: req.body.email }).exec(async (error, user) => {
-    //     if (user) {
-    //         return res.status(400).json({ error: "Email has been registed" });
-    //     }
-    // })
     let profilePicture = '';
     if (req.file) {
         profilePicture = "/public/" + req.file.filename;
@@ -151,7 +146,7 @@ exports.getUserInformation = async (req, res) => {
             return res.status(400).json({ error: "Something went wrong" });
         }
         return res.status(200).json(user);
-    }).select('firstName lastName email profilePicture public_id  _id role')
+    }).select('firstName lastName email profilePicture public_id  _id role audience_setting')
 }
 
 exports.uploadUserImage = async (req, res) => {
@@ -161,7 +156,7 @@ exports.uploadUserImage = async (req, res) => {
         const imageid = public_id && public_id.split('/')[1];
         const options = { upload_preset: 'dev_setups', public_id: imageid, overwrite: public_id ? true : false }
         const { _id } = req.user;
-        const uploadResponse = await cloudinary.uploader.upload(fileStr, options); 
+        const uploadResponse = await cloudinary.uploader.upload(fileStr, options);
 
         await User.findOneAndUpdate({ _id }, { $set: { profilePicture: uploadResponse.secure_url, public_id: uploadResponse.public_id } },
             { new: true });
@@ -170,5 +165,42 @@ exports.uploadUserImage = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(400).json({ err: err.message });
+    }
+}
+
+exports.updateAudiencePost = async (req, res) => {
+
+    const { _id } = req.user;
+    await User.findOneAndUpdate({ _id },
+        { $set: { audience_setting: req.body.audience } },
+        { new: true }, (err, result) => {
+            if (err) {
+                return res.status(400).json({ error: "Something went wrong" })
+            } else {
+                return res.status(200).json(result.audience_setting);
+            }
+        })
+}
+
+exports.getUserSuggestedByName = async (req, res) => {
+    try {
+        const options = {
+            page: parseInt(req.query.page) || 0,
+            limit: parseInt(req.query.limit) || 5,
+        };
+
+        const { keyword } = req.query;
+        const query = { lastName: { $regex: '.*' + keyword.toLowerCase() + '.*', $options: 'i' } };
+        const result = await User.find(query)
+            .skip(options.page * options.limit)
+            .limit(options.limit)
+            .sort({ lastName: 'asc' })
+            .select('firstName lastName profilePicture _id')
+        const total = await User.countDocuments(query);
+        const users = result.filter((x) => x._id != req.user._id);
+        return res.status(200).json({ users, total });
+
+    } catch (error) {
+        return res.status(500).json({ error: error })
     }
 }

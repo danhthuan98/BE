@@ -3,16 +3,16 @@ const mongoose = require('mongoose');
 const postSchema = new mongoose.Schema({
     title: {
         type: String,
-        required: true,
         trim: true
     },
+    audience: { type: String, required: true },
     postPictures: [
         { img: { type: String }, description: { type: String } }
     ],
     friendTag: [
-        {
-            userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
-        }
+
+        { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+
     ],
     likes: [
         {
